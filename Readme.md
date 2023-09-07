@@ -1,25 +1,27 @@
 # AML プロンプト フロー (Prompt Flow) ハンズオン
 
-ここでは、[RAG のハンズオン](https://github.com/tsmatsuz/llm-grounding) で作成したアプリケーションを Azure Machine Learning (AML) の prompt flow (プロンプト フロー) を使って構築します。<br>
+ここでは、[RAG のハンズオン](https://github.com/tsmatsuz/llm-grounding) で作成したアプリケーションを Azure Machine Learning (AML) の Prompt Flow (プロンプト フロー) を使って構築します。<br>
 今回、ベクトル検索で使用するデータベースとして Meta AI の FAISS (Facebook AI Similarity Search) を使用します。
 
-## Azure OpenAI Service リソースの準備 (既に作成済の方は飛ばしてください)
+Prompt Flow 全体の機能やコンセプト等については、[Azure OpenAI Developers セミナー第 2 回](https://www.youtube.com/watch?v=cEynsEWpXdA) を参照してください。(Prompt Flow では、結果の評価なども可能です。)
+
+## Azure OpenAI Service リソースの準備
+
+(既に作成済の方は、本項はスキップしてください。)
 
 [Azure Portal](https://portal.azure.com) にログインします。
 
 Azure OpenAI Service のリソースを新規作成します。<br>
 gpt-35-turbo と text-embedding-ada-002 を使用しますので、どのリージョン (東日本含む) を選択しても構いません。
 
-gpt-35-turbo と text-embedding-ada-002 を deploy します。(既に deploy 済の方は飛ばしてください。)
+gpt-35-turbo と text-embedding-ada-002 を deploy します。
 
 Azure OpenAI Service の API キーを取得します。<br>
 API キーは、リソースブレードの左メニューの「Keys and Endpoint」から取得できます。
 
 ## Azure Machine Learning リソースの準備
 
-[Azure Portal](https://portal.azure.com) にログインします。
-
-Azure OpenAI Service のリソースを新規作成します。
+Azure Machine Learning のリソースを新規作成します。
 
 [Machine Learning Studio](https://ml.azure.com/) を表示します。
 
@@ -47,32 +49,32 @@ Machine Learning Studio の左メニューの「プロンプト フロー」を�
 Prompt Flow を使って FAISS (Facebook AI Similarity Search) のベクトル インデックス ファイルを作成します。<br>
 本作業の前に、上記で作成したコンピューティング インスタンスが実行中であることを確認してください。(作成中の場合、状態が実行中になるまで待ちます。)
 
-> Note : ここでは Prompt Flow を使って FAISS インデックスを作成しましたが、あらかじめ作成された既存のベクトル インデックスも使用できます。(FAISS のベクトル インデックスの場所を指定することで、外部のインデックスを Prompt Flow に持ち込むことができます。)<br>
+> Note : ここでは Prompt Flow を使って FAISS インデックスを作成しますが、あらかじめ作成された既存のベクトル インデックスも使用できます。(FAISS のベクトル インデックスの場所を指定することで、外部のインデックスを Prompt Flow に持ち込むことができます。)<br>
 > 自身でインデックス作成をおこなうことで、事前のデータ標準化 (Normalization)、Chunk 方法のカスタマイズなど細かなチューニングが可能です。
 
-本リポジトリの faiss-test-data.zip をローカルにダウンロードして解凍します。(このデータは、Wikipedia の日本語コンテンツから抜粋した 1000 ファイルのデータセットです。)
+本リポジトリの faiss-test-data.zip をローカルにダウンロードして解凍します。(このデータは、Wikipedia の日本語コンテンツから抜粋した 1000 ファイルのデータです。)
 
 「ベクター インデックス」タブを選択して、下記の通り設定して、新しい FAISS のベクター インデックスを作成します。
 
-- データソースの種類として「Local folders」を選択し、上記で解凍したディレクトリを選択してデータをアップロードします。(これらのデータは、Azure Machine Learning 上のデータ アセットとして登録されます。)
+- データソースの種類として「Local folders」を選択し、上記で解凍したディレクトリを選択してデータ (1000 個のファイル) をアップロードします。(これらのデータは、Azure Machine Learning 上にデータ アセットとして登録されます。)
 - ベクトル ストアとして、今回は「Faiss インデックス」を選択します。
-- 接続の選択として、上記で作成した Azure OpenAI Service の接続名を選択します。(内部で、text-embedding-ada-002 の deployment が自動で探索されます。)
+- 接続の選択として、上記で作成した Azure OpenAI Service の接続名を選択します。(内部で、text-embedding-ada-002 の deployment が自動で検出され、使用されます。)
 - 実行するコンピューティングの種類として「コンピューティング インスタンス」を選択し、上記であらかじめて作成 (実行) したコンピューティング インスタンス名を選択します。
-
-![Add vector index](images/add_vector_index.png)
 
 インデックス作成は、Azure Machine Learning のパイプライン ジョブとして実行されます。(実行状況を確認することができます。)<br>
 1000 ファイルのインデックス作成には、しばらく時間がかかります。(20 分程度)<br>
 
 > Note : 長いテキストは、自動でチャンク (Chunk) され、ベクトル化されます。(例えば、file_0.txt は、file_0.txt0, file_0.txt1 などのソース名に分割されます。)<br>
-> また、内部で、この FAISS インデックスを使用したサンプルの Prompt Flow も作成されます。
+> また、この FAISS インデックスを使用したサンプルのフローも作成されます。
+
+![Add vector index](images/add_vector_index.png)
 
 インデックス作成のジョブが完了すると、インデクス ファイルは Azure Machine Learning のデータ アセット (フォルダとファイル一式) として保存されます。<br>
-この相対パスを取得するため、Machine Learning Studio の左メニューから「データ」を選択して、作成されたインデックス (インデックス名と同じ名前のデータです) を選択して、「探索」 (Explorer) タブをクリックして中身の詳細を表示し、下図 (赤い囲み) の相対パスをコピーしておきます。(このパス情報は、あとで使用します。)
+この相対パスを取得するため、Machine Learning Studio の左メニューから「データ」を選択して、作成されたインデックスのデータ (インデックス名と同じ名前のデータです) を選択して、「探索」 (Explorer) タブをクリックして中身の詳細を表示し、下図 (赤い囲み) の相対パス名をコピーしておきます。(このパス情報は、あとで使用します。)
 
 ![Get FAISS index path](images/get_index_path.png)
 
-## Prompt Flow - フローの作成 : 入力の定義
+## Prompt Flow - フローの作成 : ①入力の定義
 
 Machine Learning Studio の左メニューの「プロンプト フロー」を選択し、「フロー」タブをクリックします。<br>
 「作成」ボタンを押して、標準フローを新規作成します。(この際、サンプルとしていくつかのステップ、入力変数、出力変数が既に含まれている場合、これらはすべて削除してください。)
@@ -84,7 +86,7 @@ Machine Learning Studio の左メニューの「プロンプト フロー」を�
 
 ![Input definition](images/flow_input_definition.png)
 
-## Prompt Flow - フローの作成 : 質問の Embedding
+## Prompt Flow - フローの作成 : ②質問の Embedding
 
 ここでは、入力された質問の Embedding (ベクトル化) をおこないます。
 
@@ -95,7 +97,7 @@ Machine Learning Studio の左メニューの「プロンプト フロー」を�
 
 上図の右のように、入力の値と Embedding のステップが接続されていることを確認してください。
 
-## Prompt Flow - フローの作成 : FAISS インデックスの検索
+## Prompt Flow - フローの作成 : ③FAISS インデックスによるベクトル検索
 
 つぎに、質問のベクトルに近いコンテンツを FAISS インデックスから検索します。
 
@@ -120,7 +122,7 @@ Machine Learning Studio の左メニューの「コンピューティング」�
 
 ![Debug output 1](images/flow_debug01.png)
 
-## Prompt Flow - フローの作成 : データの加工
+## Prompt Flow - フローの作成 : ④検索結果の加工
 
 では、フローの続きを作成しましょう。<br>
 検索されたドキュメントを使って Chat Completion を実行しますが、その前に、検索結果をコンテキストとして扱えるようにデータを加工します。今回は、検索結果の上位 3000 トークンに収まる範囲のアイテムのコンテンツを取得します。<br>
@@ -185,7 +187,7 @@ def format_context(search_result: List[dict]) -> str:
 
 > Note : LangChain, Semantic Kernel の使用の際にも Python コードのツールを使用します。接続情報には、Custom Connection を使用します。(Python コード ツールから、コードを使って Custom Connection を取得できます。)
 
-## Prompt Flow - フローの作成 : Chat Completion
+## Prompt Flow - フローの作成 : ⑤Chat Completion の実行
 
 つぎに、作成されたコンテキストを使って Chat Completion を実行します。
 
@@ -218,7 +220,7 @@ user:
 
 ![Chat completion](images/flow_chat_completion.png)
 
-## Prompt Flow - フローの作成 : 出力の定義
+## Prompt Flow - フローの作成 : ⑥出力 (結果) の定義
 
 さいごに、Prompt Flow の出力変数を設定します。
 
