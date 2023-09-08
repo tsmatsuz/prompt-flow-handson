@@ -3,7 +3,7 @@
 ここでは、[RAG のハンズオン](https://github.com/tsmatsuz/llm-grounding) で作成したアプリケーションを Azure Machine Learning (AML) の Prompt Flow (プロンプト フロー) を使って構築します。<br>
 今回、ベクトル検索で使用するデータベースとして Meta AI の FAISS (Facebook AI Similarity Search) を使用します。
 
-Prompt Flow 全体の機能やコンセプト等については、[Azure OpenAI Developers セミナー第 2 回](https://www.youtube.com/watch?v=cEynsEWpXdA) を参照してください。(Prompt Flow では、結果の評価なども可能です。)
+> Prompt Flow 全体の機能やコンセプト等については、[Azure OpenAI Developers セミナー第 2 回](https://www.youtube.com/watch?v=cEynsEWpXdA) を参照してください。(ここでは扱いませんが、Prompt Flow では、結果の評価なども可能です。)
 
 ## Azure OpenAI Service リソースの準備
 
