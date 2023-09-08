@@ -89,7 +89,7 @@ Machine Learning Studio の左メニューの「プロンプト フロー」を�
 
 ## Prompt Flow - フローの作成 : ②質問の Embedding
 
-ここでは、入力された質問の Embedding (ベクトル化) をおこないます。
+ここでは、下記手順で、入力された質問の Embedding (ベクトル化) をおこないます。
 
 「その他のツール」-「Embedding」のツールを選択してステップを挿入します。<br>
 「Connection」として上記で追加した Azure OpenAI の接続情報、「deployment name」に text-embedding-ada-002 の deplyment 名、「input」には上記で作成した入力変数 (```question```) を設定します。(入力結果は、下図のようになります。)
